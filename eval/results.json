@@ -1,0 +1,49 @@
+{
+  "model": "atlas",
+  "task": "knowledge-grounded-qa",
+  "base_model": "Qwen/Qwen2.5-7B-Instruct",
+  "method": "QLoRA + RAG (grounded)",
+  "harness": "MSC Labs eval harness",
+  "disclaimer": "Illustrative reference results from the MSC Labs eval harness.",
+  "eval_set": {
+    "name": "Northwind Cloud KB QA (synthetic enterprise SaaS)",
+    "size": 1200,
+    "held_out_by": "source_document",
+    "unanswerable_fraction": 0.15
+  },
+  "baseline": {
+    "name": "GPT-4o",
+    "version": "gpt-4o-2024-08-06",
+    "answer_accuracy": 0.792,
+    "groundedness": 0.881,
+    "usd_per_1k_requests": 9.20,
+    "p50_latency_ms": 1180
+  },
+  "candidate": {
+    "name": "Atlas",
+    "answer_accuracy": 0.914,
+    "groundedness": 0.973,
+    "usd_per_1k_requests": 0.51,
+    "p50_latency_ms": 240,
+    "serving": "self-hosted A10G 24GB, bf16"
+  },
+  "delta": {
+    "answer_accuracy_points": 12.2,
+    "groundedness_points": 9.2,
+    "cost_multiple_cheaper": 18.0,
+    "latency_multiple_faster": 4.9
+  },
+  "request_token_profile": {
+    "avg_input_tokens": 620,
+    "avg_output_tokens": 110
+  },
+  "decoding": {
+    "temperature": 0.2,
+    "max_new_tokens": 160
+  },
+  "protocol": {
+    "stages": ["smoke_test", "full_run"],
+    "smoke_test_rows": 2000,
+    "full_run_epochs": 3
+  }
+}

@@ -1,0 +1,69 @@
+# Atlas — QLoRA training config (knowledge-grounded QA)
+# MSC Labs reference model. Values are realistic and used by training/train.py.
+
+base_model_id: Qwen/Qwen2.5-7B-Instruct
+run_name: atlas-qa-qlora
+seed: 42
+
+# --- Data ---
+data:
+  train_file: data/train.jsonl        # full split (see data/README.md)
+  eval_file: data/val.jsonl
+  sample_file: data/sample.jsonl      # 12-row preview shipped in this repo
+  context_field: context
+  question_field: question
+  answer_field: answer
+  max_seq_len: 2048
+
+# --- Quantization (4-bit base) ---
+quantization:
+  load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_compute_dtype: bfloat16
+
+# --- LoRA adapter ---
+lora:
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  bias: none
+  task_type: CAUSAL_LM
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+
+# --- Optimization ---
+training:
+  output_dir: outputs/atlas-qa-qlora
+  num_train_epochs: 3
+  per_device_train_batch_size: 4
+  gradient_accumulation_steps: 8      # effective batch size = 32
+  learning_rate: 2.0e-4
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.03
+  weight_decay: 0.0
+  max_grad_norm: 0.3
+  optim: paged_adamw_8bit
+  bf16: true
+  gradient_checkpointing: true
+  logging_steps: 20
+  eval_strategy: steps
+  eval_steps: 200
+  save_strategy: steps
+  save_steps: 200
+  save_total_limit: 3
+
+# --- Two-stage protocol (MSC Labs standard) ---
+# Stage 1 (smoke test): run with --smoke_test to train 1 epoch on 2k rows and
+#   confirm the pipeline end-to-end before spending full GPU budget.
+# Stage 2 (full run): the config above.
+smoke_test:
+  enabled: false
+  max_train_rows: 2000
+  num_train_epochs: 1
